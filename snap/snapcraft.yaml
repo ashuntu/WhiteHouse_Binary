@@ -1,0 +1,44 @@
+name: white-house
+adopt-info: white-house
+summary: Using the magic of CSS, hack your world into a unique burst of color.
+base: core22
+architectures:
+- amd64
+confinement: strict
+grade: stable
+
+apps:
+  white-house:
+    extensions: [gnome]
+    command: whitehouse/whitehouse.x86_64
+    common-id: com.endlessnetwork.whitehouse
+    environment:
+      LD_LIBRARY_PATH: $SNAP/whitehouse/whitehouse_Data/Plugins/x86_64:$SNAP/whitehouse/whitehouse_Data/Mono/x86_64:$LD_LIBRARY_PATH
+    plugs:
+      - audio-playback
+      - desktop
+      - desktop-legacy
+      - joystick
+      - network
+      - opengl
+      - wayland
+      - x11
+
+parts:
+  white-house:
+    plugin: dump
+    source: https://github.com/endless-network/WhiteHouse_Binary.git
+    parse-info: [com.endlessnetwork.whitehouse.appdata.xml]
+    build-packages:
+      - unzip
+      - wget
+      - jq
+    override-build: |
+      craftctl default
+      curl https://api.github.com/repos/endless-network/WhiteHouse_Binary/releases/latest | jq -r ".assets[0].browser_download_url" | xargs wget -O whitehouse.zip
+      unzip whitehouse.zip -d temp
+      mkdir -p $CRAFT_PART_INSTALL/whitehouse
+      cp temp/*/*.x86_64 $CRAFT_PART_INSTALL/whitehouse/whitehouse.x86_64
+      cp -r temp/*/*_Data $CRAFT_PART_INSTALL/whitehouse/whitehouse_Data
+      chmod +x $CRAFT_PART_INSTALL/whitehouse/whitehouse.x86_64
+      cp com.endlessnetwork*.png $CRAFT_PART_INSTALL/whitehouse
