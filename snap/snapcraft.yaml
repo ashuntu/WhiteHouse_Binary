@@ -16,29 +16,33 @@ apps:
       LD_LIBRARY_PATH: $SNAP/whitehouse/whitehouse_Data/Plugins/x86_64:$SNAP/whitehouse/whitehouse_Data/Mono/x86_64:$LD_LIBRARY_PATH
     plugs:
       - audio-playback
-      - desktop
-      - desktop-legacy
       - joystick
       - network
-      - opengl
-      - wayland
-      - x11
 
 parts:
   white-house:
-    plugin: dump
+    plugin: nil
     source: https://github.com/endless-network/WhiteHouse_Binary.git
     parse-info: [com.endlessnetwork.whitehouse.appdata.xml]
     build-packages:
       - unzip
       - wget
       - jq
-    override-build: |
+    override-pull: |
       craftctl default
       curl https://api.github.com/repos/endless-network/WhiteHouse_Binary/releases/latest | jq -r ".assets[0].browser_download_url" | xargs wget -O whitehouse.zip
       unzip whitehouse.zip -d temp
+    override-build: |
+      craftctl default
+      # Grab latest release
       mkdir -p $CRAFT_PART_INSTALL/whitehouse
       cp temp/*/*.x86_64 $CRAFT_PART_INSTALL/whitehouse/whitehouse.x86_64
       cp -r temp/*/*_Data $CRAFT_PART_INSTALL/whitehouse/whitehouse_Data
       chmod +x $CRAFT_PART_INSTALL/whitehouse/whitehouse.x86_64
-      cp com.endlessnetwork*.png $CRAFT_PART_INSTALL/whitehouse
+      # Metadata
+      sed -i 's|Icon=com.endlessnetwork.whitehouse$|Icon=${SNAP}/meta/gui/icon.png|g' com.endlessnetwork.whitehouse.desktop
+      sed -i 's|Exec=com.endlessnetwork.whitehouse.sh$|Exec=white-house|g' com.endlessnetwork.whitehouse.desktop
+      mkdir -p $CRAFT_PART_INSTALL/meta/gui
+      cp com.endlessnetwork.whitehouse_128.png $CRAFT_PART_INSTALL/meta/gui/icon.png
+      cp com.endlessnetwork.whitehouse.desktop $CRAFT_PART_INSTALL/meta/gui/
+      cp LICENSE $CRAFT_PART_INSTALL
